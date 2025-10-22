@@ -240,22 +240,23 @@ class SudokuGame {
         const col = index % 9;
         
         let newIndex = index;
+        let delta = 0;
         
         switch(e.key) {
             case 'ArrowUp':
-                if (row > 0) newIndex = index - 9;
+                if (row > 0) delta = -9;
                 e.preventDefault();
                 break;
             case 'ArrowDown':
-                if (row < 8) newIndex = index + 9;
+                if (row < 8) delta = 9;
                 e.preventDefault();
                 break;
             case 'ArrowLeft':
-                if (col > 0) newIndex = index - 1;
+                if (col > 0) delta = -1;
                 e.preventDefault();
                 break;
             case 'ArrowRight':
-                if (col < 8) newIndex = index + 1;
+                if (col < 8) delta = 1;
                 e.preventDefault();
                 break;
             case 'Backspace':
@@ -266,9 +267,27 @@ class SudokuGame {
                 break;
         }
         
-        if (newIndex !== index) {
+        if (delta !== 0) {
             const inputs = document.querySelectorAll('.cell input');
-            inputs[newIndex].focus();
+            let candidate = newIndex + delta;
+            // Helper to check bounds respecting row/col edges for left/right
+            const inBounds = (from, to, d) => {
+                if (d === -1) return Math.floor(from / 9) === Math.floor(to / 9) && to >= 0; // left, same row
+                if (d === 1) return Math.floor(from / 9) === Math.floor(to / 9) && to <= Math.floor(from / 9) * 9 + 8; // right, same row
+                if (d === -9) return to >= 0; // up
+                if (d === 9) return to < 81; // down
+                return false;
+            };
+            while (inBounds(newIndex, candidate, delta)) {
+                if (!inputs[candidate].disabled) {
+                    newIndex = candidate;
+                    break;
+                }
+                candidate += delta;
+            }
+            if (newIndex !== index) {
+                inputs[newIndex].focus();
+            }
         }
     }
 
